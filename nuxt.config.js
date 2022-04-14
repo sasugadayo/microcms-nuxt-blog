@@ -44,19 +44,34 @@ export default {
   build: {
   },
 
+
   generate: {
     async routes() {
+      const limit = 10
+      const range = (start, end) =>
+        [...Array(end - start + 1)].map((_, i) => start + i)
+
+      // 一覧のページング
       const pages = await axios
-        .get('https://htw7b0y0oi.microcms.io/api/v1/blog?limit=100', {
-          headers: { 'X-MICROCMS-API-KEY': '9e9dfe45d78c4190b56c69c0684fbe77fdb1' }
+        .get(`https://htw7b0y0oi.microcms.io/api/v1/blog?limit=0`, {
+          headers: { 'X-MICROCMS-API-KEY': '9e9dfe45d78c4190b56c69c0684fbe77fdb1' },
         })
         .then((res) =>
-          res.data.contents.map((content) => ({
-            route: `/${content.id}`,
-            payload: content
+          range(1, Math.ceil(res.data.totalCount / limit)).map((p) => ({
+            route: `/page/${p}`,
           }))
         )
       return pages
-    }
-  }
+    },
+  },
+
+  router: {
+    extendRoutes(routes, resolve) {
+      routes.push({
+        path: '/page/:p',
+        component: resolve(__dirname, 'pages/index.vue'),
+        name: 'page',
+      })
+    },
+  },
 }
